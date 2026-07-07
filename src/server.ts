@@ -1,13 +1,13 @@
 import http from 'node:http';
 
-import mongoose from 'mongoose';
-
 import { app } from '@/app';
 import { connectDatabase } from '@/config/database';
 import { env } from '@/config/env';
 import logger from '@/lib/logger';
 
 let server: http.Server;
+
+const SHUTDOWN_TIMEOUT_MS = 10000;
 
 const startServer = async () => {
   try {
@@ -17,25 +17,42 @@ const startServer = async () => {
     server = app.listen(env.PORT, () => {
       logger.info(`Mini ERP backend listening on port ${env.PORT}`);
     });
+
+    server.timeout = 30000;
+    server.keepAliveTimeout = 65000;
+    server.headersTimeout = 66000;
   } catch (error) {
     logger.fatal(error, 'Failed to start server');
     process.exit(1);
   }
 };
 
+const forceExit = (signal: string) => {
+  logger.error(`${signal} could not close connections in time, forcefully shutting down`);
+  process.exit(1);
+};
+
 const shutdown = async (signal: string) => {
   logger.info(`${signal} received. Shutting down gracefully.`);
 
-  if (server) {
-    server.close(async () => {
-      await mongoose.connection.close();
-      process.exit(0);
-    });
-    return;
-  }
+  const timer = setTimeout(() => forceExit(signal), SHUTDOWN_TIMEOUT_MS);
 
-  await mongoose.connection.close();
-  process.exit(0);
+  try {
+    if (server) {
+      await new Promise<void>((resolve) => {
+        server.close(() => resolve());
+      });
+    }
+
+    await import('mongoose').then((m) => m.default.connection.close(false));
+    clearTimeout(timer);
+    logger.info('Shutdown complete');
+    process.exit(0);
+  } catch (error) {
+    clearTimeout(timer);
+    logger.fatal(error, 'Error during shutdown');
+    process.exit(1);
+  }
 };
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));

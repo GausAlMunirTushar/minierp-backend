@@ -33,19 +33,14 @@ const seedUsers = async () => {
   await connectDatabase();
 
   for (const user of defaultUsers) {
-    const exists = await User.findOne({ email: user.email });
+    const exists = await User.findOne({ email: user.email }).select('+password');
 
     if (exists) {
-      await User.updateOne(
-        { email: user.email },
-        {
-          $set: {
-            name: user.name,
-            role: user.role,
-            isActive: true,
-          },
-        },
-      );
+      exists.name = user.name;
+      exists.role = user.role;
+      exists.isActive = true;
+      exists.password = user.password;
+      await exists.save();
       continue;
     }
 

@@ -1,5 +1,7 @@
 import type { Response } from 'express';
 
+import type { SuccessResponse } from '@/types/response';
+
 type ApiResponse<T> = {
   statusCode: number;
   message: string;
@@ -7,19 +9,15 @@ type ApiResponse<T> = {
   meta?: Record<string, unknown>;
 };
 
-/**
- * Sends a consistent API success response.
- *
- * @param res - Express response object
- * @param payload - Response status, message, data, and optional metadata
- */
 export const sendResponse = <T>(res: Response, payload: ApiResponse<T>): void => {
   const { statusCode, message, data = null, meta } = payload;
 
-  res.status(statusCode).json({
+  const body: SuccessResponse<T> = {
     success: true,
     message,
     data,
     ...(meta ? { meta } : {}),
-  });
+  };
+
+  res.status(statusCode).json(body);
 };

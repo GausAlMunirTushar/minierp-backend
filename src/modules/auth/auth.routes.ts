@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import { authLimiter } from '@/config/rateLimit';
 import { AuthController } from '@/modules/auth/auth.controller';
 import { loginValidationSchema } from '@/modules/auth/auth.validation';
 import { validate } from '@/middlewares/validate';
@@ -45,4 +46,4 @@ export const authRoutes = Router();
  *           application/json:
  *             schema: { $ref: '#/components/schemas/ApiError' }
  */
-authRoutes.post('/login', validate(loginValidationSchema), AuthController.login);
+authRoutes.post('/login', authLimiter, validate(loginValidationSchema), AuthController.login);

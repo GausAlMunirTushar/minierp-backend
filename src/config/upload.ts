@@ -3,8 +3,6 @@ import path from 'node:path';
 
 import multer from 'multer';
 
-import { AppError } from '@/utils/AppError';
-
 const productUploadDir = path.join(process.cwd(), 'uploads', 'products');
 
 fs.mkdirSync(productUploadDir, { recursive: true });
@@ -22,7 +20,7 @@ const storage = multer.diskStorage({
 
 const imageFileFilter: multer.Options['fileFilter'] = (_req, file, cb) => {
   if (!file.mimetype.startsWith('image/')) {
-    cb(new AppError(400, 'Only image files are allowed'));
+    cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'images'));
     return;
   }
 

@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import type { Request } from 'express';
 
 import type {
@@ -7,23 +10,32 @@ import type {
 import { Product } from '@/modules/product/product.model';
 import { AppError } from '@/utils/AppError';
 import { buildQuery } from '@/utils/queryBuilder';
+import logger from '@/lib/logger';
 
 const getImageUrl = (file?: Express.Multer.File): string | undefined =>
   file ? `/uploads/products/${file.filename}` : undefined;
 
-/**
- * Creates a product and stores the uploaded image path.
- *
- * @param payload - Product fields
- * @param file - Required uploaded product image
- * @returns Created product
- * @throws {AppError} When image is missing
- */
+const deleteImageFile = (imagePath?: string): void => {
+  if (!imagePath || !imagePath.startsWith('/uploads/')) return;
+
+  const fullPath = path.join(process.cwd(), imagePath);
+
+  fs.unlink(fullPath, (error) => {
+    if (error && (error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      logger.warn({ path: fullPath }, 'Failed to delete product image file');
+    }
+  });
+};
+
 export const createProduct = async (payload: CreateProductPayload, file?: Express.Multer.File) => {
   const image = getImageUrl(file);
 
   if (!image) {
     throw new AppError(400, 'Product image is required');
+  }
+
+  if (payload.sellingPrice <= payload.purchasePrice) {
+    throw new AppError(400, 'Selling price must be greater than purchase price');
   }
 
   return Product.create({
@@ -33,22 +45,9 @@ export const createProduct = async (payload: CreateProductPayload, file?: Expres
   });
 };
 
-/**
- * Returns searchable and paginated products.
- *
- * @param query - Product list query parameters
- * @returns Paginated product list
- */
 export const getProducts = async (query: Request['query']) =>
   buildQuery(Product, query, ['name', 'sku', 'category']);
 
-/**
- * Returns one product by id.
- *
- * @param id - Product id
- * @returns Product document
- * @throws {AppError} When product does not exist
- */
 export const getProductById = async (id: string) => {
   const product = await Product.findById(id);
 
@@ -59,21 +58,26 @@ export const getProductById = async (id: string) => {
   return product;
 };
 
-/**
- * Updates product fields and optionally replaces image path.
- *
- * @param id - Product id
- * @param payload - Partial product fields
- * @param file - Optional product image
- * @returns Updated product
- * @throws {AppError} When product does not exist
- */
 export const updateProduct = async (
   id: string,
   payload: UpdateProductPayload,
   file?: Express.Multer.File,
 ) => {
   const image = getImageUrl(file);
+
+  if (payload.purchasePrice !== undefined && payload.sellingPrice !== undefined) {
+    if (payload.sellingPrice <= payload.purchasePrice) {
+      throw new AppError(400, 'Selling price must be greater than purchase price');
+    }
+  }
+
+  if (image) {
+    const existingProduct = await Product.findById(id).select('image');
+    if (existingProduct?.image) {
+      deleteImageFile(existingProduct.image);
+    }
+  }
+
   const updatePayload = {
     ...payload,
     ...(payload.sku ? { sku: payload.sku.toUpperCase() } : {}),
@@ -92,19 +96,14 @@ export const updateProduct = async (
   return product;
 };
 
-/**
- * Deletes a product by id.
- *
- * @param id - Product id
- * @returns Deleted product
- * @throws {AppError} When product does not exist
- */
 export const deleteProduct = async (id: string) => {
   const product = await Product.findByIdAndDelete(id);
 
   if (!product) {
     throw new AppError(404, 'Product not found');
   }
+
+  deleteImageFile(product.image);
 
   return product;
 };

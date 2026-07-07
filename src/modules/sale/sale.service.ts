@@ -5,6 +5,7 @@ import { Sale } from '@/modules/sale/sale.model';
 import type { CreateSalePayload } from '@/modules/sale/sale.validation';
 import { AppError } from '@/utils/AppError';
 import { buildQuery } from '@/utils/queryBuilder';
+import logger from '@/lib/logger';
 
 type SaleActor = {
   id: string;
@@ -61,7 +62,7 @@ const buildSaleDocument = async (payload: CreateSalePayload, user: SaleActor) =>
 const createSaleWithoutTransaction = async (payload: CreateSalePayload, user: SaleActor) => {
   const saleDocument = await buildSaleDocument(payload, user);
 
-  await Promise.all(
+  const updateResults = await Promise.all(
     payload.items.map((item) =>
       Product.updateOne(
         { _id: item.product, stockQuantity: { $gte: item.quantity } },
@@ -70,6 +71,15 @@ const createSaleWithoutTransaction = async (payload: CreateSalePayload, user: Sa
     ),
   );
 
+  const failedIndex = updateResults.findIndex((result) => result.modifiedCount !== 1);
+
+  if (failedIndex !== -1) {
+    throw new AppError(
+      400,
+      `Insufficient stock for product at position ${failedIndex + 1}`,
+    );
+  }
+
   return Sale.create({
     items: saleDocument.saleItems,
     grandTotal: saleDocument.grandTotal,
@@ -77,15 +87,27 @@ const createSaleWithoutTransaction = async (payload: CreateSalePayload, user: Sa
   });
 };
 
-/**
- * Creates a sale, reduces product stock, and stores immutable sale item snapshots.
- *
- * @param payload - Sale item list
- * @param user - Authenticated user creating the sale
- * @returns Created sale
- * @throws {AppError} When stock is unavailable or product ids are invalid
- */
+const isReplicaSet = async (): Promise<boolean> => {
+  try {
+    if (!mongoose.connection.db) return false;
+
+    const adminDb = mongoose.connection.db.admin();
+    const { setName } = await adminDb.command({ replSetGetStatus: 1 }).catch(() => ({
+      setName: null,
+    }));
+    return !!setName;
+  } catch {
+    return false;
+  }
+};
+
 export const createSale = async (payload: CreateSalePayload, user: SaleActor) => {
+  const replicaSet = await isReplicaSet();
+
+  if (!replicaSet) {
+    return createSaleWithoutTransaction(payload, user);
+  }
+
   const session = await mongoose.startSession();
 
   try {
@@ -118,11 +140,11 @@ export const createSale = async (payload: CreateSalePayload, user: SaleActor) =>
 
     await session.commitTransaction();
     return sale;
-  } catch (error: any) {
-    await session.abortTransaction().catch(() => undefined);
-
-    if (error?.message?.includes('Transaction numbers are only allowed')) {
-      return createSaleWithoutTransaction(payload, user);
+  } catch (error) {
+    try {
+      await session.abortTransaction();
+    } catch (abortError) {
+      logger.error(abortError, 'Failed to abort sale transaction');
     }
 
     throw error;
@@ -131,10 +153,4 @@ export const createSale = async (payload: CreateSalePayload, user: SaleActor) =>
   }
 };
 
-/**
- * Returns paginated sale history.
- *
- * @param query - Sale list query parameters
- * @returns Paginated sales
- */
 export const getSales = async (query: Record<string, unknown>) => buildQuery(Sale, query, []);

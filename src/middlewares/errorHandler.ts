@@ -5,11 +5,8 @@ import { ZodError } from 'zod';
 
 import { env } from '@/config/env';
 import { AppError } from '@/utils/AppError';
-
-type ErrorItem = {
-  path?: string;
-  message: string;
-};
+import logger from '@/lib/logger';
+import type { ErrorItem, ErrorResponse } from '@/types/response';
 
 const formatZodErrors = (error: ZodError): ErrorItem[] =>
   error.issues.map((issue) => ({
@@ -17,10 +14,7 @@ const formatZodErrors = (error: ZodError): ErrorItem[] =>
     message: issue.message,
   }));
 
-/**
- * Converts known operational failures into consistent API error responses.
- */
-export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
+export const errorHandler: ErrorRequestHandler = (error, req, res, _next) => {
   let statusCode = 500;
   let message = 'Something went wrong';
   let errors: ErrorItem[] = [];
@@ -43,29 +37,43 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
       path: item.path,
       message: item.message,
     }));
-  } else if (error?.code === 11000) {
+  } else if ((error as Record<string, unknown>)?.code === 11000) {
     statusCode = 409;
     message = 'Duplicate value already exists';
-    errors = Object.keys(error.keyValue || {}).map((key) => ({
+    const keyValue = (error as Record<string, unknown>).keyValue as Record<string, unknown> | undefined;
+    errors = Object.keys(keyValue || {}).map((key) => ({
       path: key,
       message: `${key} already exists`,
     }));
   } else if (error instanceof jwt.JsonWebTokenError || error instanceof jwt.TokenExpiredError) {
     statusCode = 401;
     message = 'Invalid or expired authentication token';
-  } else if (error?.name === 'MulterError') {
+  } else if ((error as Record<string, unknown>)?.name === 'MulterError') {
     statusCode = 400;
-    message = error.message;
+    message = (error as Error).message;
   }
 
-  const response: Record<string, unknown> = {
+  if (statusCode >= 500) {
+    logger.error(
+      {
+        requestId: req.requestId,
+        method: req.method,
+        url: req.originalUrl,
+        statusCode,
+      },
+      error.message,
+    );
+  }
+
+  const response: ErrorResponse = {
     success: false,
     message,
     errors,
+    ...(req.requestId ? { requestId: req.requestId } : {}),
   };
 
   if (env.NODE_ENV !== 'production') {
-    response.stack = error?.stack;
+    response.stack = (error as Error)?.stack;
   }
 
   res.status(statusCode).json(response);

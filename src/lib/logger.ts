@@ -18,6 +18,9 @@ const logger = pino({
           },
         },
       }),
+  mixin() {
+    return {};
+  },
 });
 
 export default logger;

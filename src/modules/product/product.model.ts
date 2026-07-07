@@ -50,6 +50,4 @@ const productSchema = new Schema<IProduct>(
   },
 );
 
-productSchema.index({ name: 'text', sku: 'text', category: 'text' });
-
 export const Product = model<IProduct>('Product', productSchema);

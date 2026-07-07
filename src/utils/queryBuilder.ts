@@ -14,15 +14,6 @@ type QueryResult<T> = {
 
 type QueryParams = Record<string, unknown>;
 
-/**
- * Applies common search, filter, sort, and pagination behavior to a Mongoose model.
- *
- * @param model - Mongoose model to query
- * @param query - Incoming query parameters
- * @param searchableFields - Fields included in case-insensitive text search
- * @param baseFilter - Extra filter always applied to the query
- * @returns Paginated data and pagination metadata
- */
 export const buildQuery = async <T>(
   model: Model<T>,
   query: QueryParams,
@@ -37,7 +28,7 @@ export const buildQuery = async <T>(
 
   const filter: FilterQuery<T> = { ...baseFilter };
 
-  if (search) {
+  if (search && searchableFields.length > 0) {
     filter.$or = searchableFields.map((field) => ({
       [field]: { $regex: search, $options: 'i' },
     })) as FilterQuery<T>[];
