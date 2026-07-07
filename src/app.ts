@@ -5,8 +5,10 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import swaggerUi from 'swagger-ui-express';
 
 import { env } from '@/config/env';
+import { swaggerSpec } from '@/config/swagger';
 import { errorHandler } from '@/middlewares/errorHandler';
 import { notFound } from '@/middlewares/notFound';
 import { routes } from '@/routes';
@@ -40,6 +42,11 @@ app.get('/health', (_req, res) => {
     message: 'Mini ERP backend is healthy',
   });
 });
+
+app.get('/api-docs.json', (_req, res) => {
+  res.json(swaggerSpec);
+});
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { customSiteTitle: 'Mini ERP API Docs' }));
 
 app.use('/api/v1', routes);
 app.use(notFound);
