@@ -10,7 +10,7 @@
     "start": "node dist/server.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "seed": "ts-node -r tsconfig-paths/register src/scripts/seedUsers.ts"
+    "seed": "ts-node -r tsconfig-paths/register src/seeders/index.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

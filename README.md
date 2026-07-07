@@ -51,7 +51,7 @@ pnpm dev    # starts the API on http://localhost:4000
 
 ## Default Seed Users
 
-Created/updated by `pnpm seed` (see `src/scripts/seedUsers.ts`):
+Created/updated by `pnpm seed` (see `src/seeders/`):
 
 | Role | Email | Password |
 | --- | --- | --- |
@@ -115,7 +115,7 @@ src/
     sale/                # sale creation, stock control, sale history
     dashboard/           # aggregate stats
     setup/               # authenticated app bootstrap payload
-  scripts/seedUsers.ts   # seeds default admin/manager/employee accounts
+  seeders/               # seed data: users, roles, categories (run via `pnpm seed`)
   utils/                 # AppError, catchAsync, queryBuilder, sendResponse
 ```
 
