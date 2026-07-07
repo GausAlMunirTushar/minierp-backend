@@ -15,11 +15,24 @@ type UploadResult = {
   publicId: string;
 };
 
+const sanitizePublicId = (originalname: string): string => {
+  const nameWithoutExt = originalname.replace(/\.[^.]+$/, '');
+
+  const sanitized = nameWithoutExt
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-');
+
+  return `${sanitized}-${Date.now()}`;
+};
+
 export const uploadProductImage = (file: Express.Multer.File): Promise<UploadResult> =>
   new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: 'minierp/products',
+        public_id: sanitizePublicId(file.originalname),
         resource_type: 'image',
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'avif'],
         transformation: [{ quality: 'auto', fetch_format: 'auto' }],
