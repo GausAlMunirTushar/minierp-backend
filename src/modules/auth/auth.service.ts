@@ -49,6 +49,6 @@ export const loginUser = async (payload: LoginPayload): Promise<LoginResult> => 
   return {
     accessToken,
     expiresIn: env.JWT_EXPIRES_IN,
-    user: enrichUserPermissions(toSafeUser(user)),
+    user: await enrichUserPermissions(toSafeUser(user)),
   };
 };

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import { authenticate } from '@/middlewares/authenticate';
-import { authorize } from '@/middlewares/authorize';
+import { requirePermission } from '@/middlewares/requirePermission';
 import { validate } from '@/middlewares/validate';
 import { SaleController } from '@/modules/sale/sale.controller';
 import {
@@ -91,8 +91,8 @@ saleRoutes.use(authenticate);
 saleRoutes
   .route('/')
   .post(
-    authorize('admin', 'manager', 'employee'),
+    requirePermission('sales.create'),
     validate(createSaleValidationSchema),
     SaleController.create,
   )
-  .get(authorize('admin', 'manager'), validate(saleListValidationSchema), SaleController.list);
+  .get(requirePermission('sales.view'), validate(saleListValidationSchema), SaleController.list);

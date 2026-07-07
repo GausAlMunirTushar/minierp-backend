@@ -26,6 +26,7 @@ const definition: swaggerJsdoc.OAS3Definition = {
     { name: 'Sales', description: 'Sale creation with automatic stock reduction, sale history' },
     { name: 'Dashboard', description: 'Aggregate statistics and low-stock monitoring' },
     { name: 'Setup', description: 'Authenticated app bootstrap payload' },
+    { name: 'Roles', description: 'Admin management of role-to-permission assignments' },
   ],
   components: {
     securitySchemes: {
@@ -74,6 +75,20 @@ const definition: swaggerJsdoc.OAS3Definition = {
           sellingPrice: { type: 'number', example: 14.99 },
           stockQuantity: { type: 'number', example: 42 },
           image: { type: 'string', example: '/uploads/products/1710000000000-123456789.png' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Role: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string', example: '65f1c2b3a4d5e6f7a8b9c0d1' },
+          name: { type: 'string', enum: ['admin', 'manager', 'employee'], example: 'manager' },
+          permissions: {
+            type: 'array',
+            items: { type: 'string' },
+            example: ['dashboard.view', 'products.view', 'products.create'],
+          },
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
         },

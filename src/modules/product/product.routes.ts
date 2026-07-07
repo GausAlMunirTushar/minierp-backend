@@ -2,7 +2,7 @@ import { Router } from 'express';
 
 import { productImageUpload } from '@/config/upload';
 import { authenticate } from '@/middlewares/authenticate';
-import { authorize } from '@/middlewares/authorize';
+import { requirePermission } from '@/middlewares/requirePermission';
 import { validate } from '@/middlewares/validate';
 import { ProductController } from '@/modules/product/product.controller';
 import {
@@ -95,13 +95,13 @@ productRoutes.use(authenticate);
 productRoutes
   .route('/')
   .post(
-    authorize('admin', 'manager'),
+    requirePermission('products.create'),
     productImageUpload.single('image'),
     validate(createProductValidationSchema),
     ProductController.create,
   )
   .get(
-    authorize('admin', 'manager', 'employee'),
+    requirePermission('products.view'),
     validate(productListValidationSchema),
     ProductController.list,
   );
@@ -203,14 +203,14 @@ productRoutes
 productRoutes
   .route('/:id')
   .get(
-    authorize('admin', 'manager', 'employee'),
+    requirePermission('products.view'),
     validate(productIdValidationSchema),
     ProductController.details,
   )
   .patch(
-    authorize('admin', 'manager'),
+    requirePermission('products.update'),
     productImageUpload.single('image'),
     validate(updateProductValidationSchema),
     ProductController.update,
   )
-  .delete(authorize('admin'), validate(productIdValidationSchema), ProductController.delete);
+  .delete(requirePermission('products.delete'), validate(productIdValidationSchema), ProductController.delete);

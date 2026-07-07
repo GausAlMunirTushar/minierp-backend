@@ -4,6 +4,7 @@ import { app } from '@/app';
 import { connectDatabase } from '@/config/database';
 import { env } from '@/config/env';
 import logger from '@/lib/logger';
+import { ensureDefaultRoles } from '@/modules/role/role.service';
 
 let server: http.Server;
 
@@ -13,6 +14,9 @@ const startServer = async () => {
   try {
     await connectDatabase();
     logger.info('MongoDB connected');
+
+    await ensureDefaultRoles();
+    logger.info('Default roles ensured');
 
     server = app.listen(env.PORT, () => {
       logger.info(`Mini ERP backend listening on port ${env.PORT}`);

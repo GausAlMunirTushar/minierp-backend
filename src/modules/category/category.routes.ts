@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import { authenticate } from '@/middlewares/authenticate';
-import { authorize } from '@/middlewares/authorize';
+import { requirePermission } from '@/middlewares/requirePermission';
 import { validate } from '@/middlewares/validate';
 import { CategoryController } from '@/modules/category/category.controller';
 import {
@@ -81,12 +81,12 @@ categoryRoutes.use(authenticate);
 categoryRoutes
   .route('/')
   .post(
-    authorize('admin', 'manager'),
+    requirePermission('categories.create'),
     validate(createCategoryValidationSchema),
     CategoryController.create,
   )
   .get(
-    authorize('admin', 'manager', 'employee'),
+    requirePermission('categories.view'),
     validate(categoryListValidationSchema),
     CategoryController.list,
   );
@@ -185,13 +185,17 @@ categoryRoutes
 categoryRoutes
   .route('/:id')
   .get(
-    authorize('admin', 'manager', 'employee'),
+    requirePermission('categories.view'),
     validate(categoryIdValidationSchema),
     CategoryController.details,
   )
   .patch(
-    authorize('admin', 'manager'),
+    requirePermission('categories.update'),
     validate(updateCategoryValidationSchema),
     CategoryController.update,
   )
-  .delete(authorize('admin', 'manager'), validate(categoryIdValidationSchema), CategoryController.delete);
+  .delete(
+    requirePermission('categories.delete'),
+    validate(categoryIdValidationSchema),
+    CategoryController.delete,
+  );

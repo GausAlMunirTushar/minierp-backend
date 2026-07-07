@@ -11,7 +11,7 @@ export const getSetup = async (userId: string) => {
   }
 
   return {
-    user: enrichUserPermissions({
+    user: await enrichUserPermissions({
       id: user._id.toString(),
       name: user.name,
       email: user.email,

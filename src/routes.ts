@@ -4,6 +4,7 @@ import { authRoutes } from '@/modules/auth/auth.routes';
 import { categoryRoutes } from '@/modules/category/category.routes';
 import { dashboardRoutes } from '@/modules/dashboard/dashboard.routes';
 import { productRoutes } from '@/modules/product/product.routes';
+import { roleRoutes } from '@/modules/role/role.routes';
 import { saleRoutes } from '@/modules/sale/sale.routes';
 import { setupRoutes } from '@/modules/setup/setup.routes';
 
@@ -15,3 +16,4 @@ routes.use('/categories', categoryRoutes);
 routes.use('/sales', saleRoutes);
 routes.use('/dashboard', dashboardRoutes);
 routes.use('/setup', setupRoutes);
+routes.use('/roles', roleRoutes);
