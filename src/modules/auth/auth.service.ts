@@ -5,6 +5,7 @@ import { env } from '@/config/env';
 import type { LoginPayload } from '@/modules/auth/auth.validation';
 import type { SafeUser } from '@/modules/user/user.interface';
 import { User } from '@/modules/user/user.model';
+import { enrichUserPermissions } from '@/modules/user/user.permissions';
 import { AppError } from '@/utils/AppError';
 
 type LoginResult = {
@@ -52,6 +53,6 @@ export const loginUser = async (payload: LoginPayload): Promise<LoginResult> => 
   return {
     accessToken,
     expiresIn: env.JWT_EXPIRES_IN,
-    user: toSafeUser(user),
+    user: enrichUserPermissions(toSafeUser(user)),
   };
 };

@@ -36,7 +36,8 @@ export const updateProductValidationSchema = z.object({
       sellingPrice: numberFromFormData.optional(),
       stockQuantity: stockFromFormData.optional(),
     })
-    .refine((value) => Object.keys(value).length > 0, 'At least one field is required'),
+    .optional()
+    .default({}),
   file: z
     .object({
       filename: z.string(),
