@@ -10,20 +10,20 @@ const defaultUsers: Array<{
 }> = [
   {
     name: 'Admin User',
-    email: 'admin@minierp.local',
-    password: 'Admin123!',
+    email: 'admin@minierp.com',
+    password: 'Password123!',
     role: 'admin',
   },
   {
     name: 'Manager User',
-    email: 'manager@minierp.local',
-    password: 'Manager123!',
+    email: 'manager@minierp.com',
+    password: 'Password123!',
     role: 'manager',
   },
   {
     name: 'Employee User',
-    email: 'employee@minierp.local',
-    password: 'Employee123!',
+    email: 'employee@minierp.com',
+    password: 'Password123!',
     role: 'employee',
   },
 ];
