@@ -8,6 +8,7 @@ export interface IProduct extends Document<Types.ObjectId> {
   sellingPrice: number;
   stockQuantity: number;
   image: string;
+  imagePublicId: string;
   createdAt: Date;
   updatedAt: Date;
 }

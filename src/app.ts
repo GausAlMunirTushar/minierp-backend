@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
@@ -31,7 +29,7 @@ app.use(
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", 'data:', 'blob:'],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com'],
       },
     },
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
@@ -59,7 +57,6 @@ app.use(compression());
 app.use(sanitize);
 app.use(express.json({ limit: '10mb' }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev', { stream: morganStream }));
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.get('/health', async (_req, res) => {
   const dbState = mongoose.connection.readyState;
