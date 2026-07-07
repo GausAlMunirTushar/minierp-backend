@@ -12,6 +12,7 @@ import { swaggerSpec } from '@/config/swagger';
 import { errorHandler } from '@/middlewares/errorHandler';
 import { notFound } from '@/middlewares/notFound';
 import { routes } from '@/routes';
+import { morganStream } from '@/lib/logger';
 
 export const app = express();
 
@@ -33,7 +34,7 @@ app.use(
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev', { stream: morganStream }));
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.get('/health', (_req, res) => {

@@ -1,6 +1,7 @@
 import { connectDatabase, disconnectDatabase } from '@/config/database';
 import type { UserRole } from '@/modules/user/user.interface';
 import { User } from '@/modules/user/user.model';
+import logger from '@/lib/logger';
 
 const defaultUsers: Array<{
   name: string;
@@ -51,12 +52,13 @@ const seedUsers = async () => {
     await User.create(user);
   }
 
+
   await disconnectDatabase();
-  console.log('Default users seeded successfully');
+  logger.info('Default users seeded successfully');
 };
 
 seedUsers().catch(async (error) => {
-  console.error('Failed to seed users', error);
+  logger.error(error, 'Failed to seed users');
   await disconnectDatabase().catch(() => undefined);
   process.exit(1);
 });

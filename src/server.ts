@@ -5,25 +5,26 @@ import mongoose from 'mongoose';
 import { app } from '@/app';
 import { connectDatabase } from '@/config/database';
 import { env } from '@/config/env';
+import logger from '@/lib/logger';
 
 let server: http.Server;
 
 const startServer = async () => {
   try {
     await connectDatabase();
-    console.log('MongoDB connected');
+    logger.info('MongoDB connected');
 
     server = app.listen(env.PORT, () => {
-      console.log(`Mini ERP backend listening on port ${env.PORT}`);
+      logger.info(`Mini ERP backend listening on port ${env.PORT}`);
     });
   } catch (error) {
-    console.error('Failed to start server', error);
+    logger.fatal(error, 'Failed to start server');
     process.exit(1);
   }
 };
 
 const shutdown = async (signal: string) => {
-  console.log(`${signal} received. Shutting down gracefully.`);
+  logger.info(`${signal} received. Shutting down gracefully.`);
 
   if (server) {
     server.close(async () => {
@@ -41,12 +42,12 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
 process.on('unhandledRejection', (reason) => {
-  console.error('Unhandled rejection', reason);
+  logger.error(reason, 'Unhandled rejection');
   shutdown('unhandledRejection');
 });
 
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception', error);
+  logger.fatal(error, 'Uncaught exception');
   process.exit(1);
 });
 
