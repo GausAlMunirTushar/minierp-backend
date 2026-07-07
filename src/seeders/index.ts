@@ -7,7 +7,7 @@ import logger from '@/lib/logger';
 const seedAll = async () => {
   try {
     await connectDatabase();
-    logger.info('Database connected — running seeders');
+    logger.info('Database connected - running seeders');
 
     await seedRoles();
     await seedCategories();
