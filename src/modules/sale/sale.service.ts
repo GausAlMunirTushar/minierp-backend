@@ -62,29 +62,41 @@ const buildSaleDocument = async (payload: CreateSalePayload, user: SaleActor) =>
 const createSaleWithoutTransaction = async (payload: CreateSalePayload, user: SaleActor) => {
   const saleDocument = await buildSaleDocument(payload, user);
 
-  const updateResults = await Promise.all(
-    payload.items.map((item) =>
-      Product.updateOne(
+  const appliedDecrements: { product: string; quantity: number }[] = [];
+
+  const rollbackAppliedDecrements = async () => {
+    await Promise.all(
+      appliedDecrements.map(({ product, quantity }) =>
+        Product.updateOne({ _id: product }, { $inc: { stockQuantity: quantity } }).catch((rollbackError) =>
+          logger.error(rollbackError, 'Failed to roll back stock decrement after failed sale'),
+        ),
+      ),
+    );
+  };
+
+  try {
+    for (const item of payload.items) {
+      const result = await Product.updateOne(
         { _id: item.product, stockQuantity: { $gte: item.quantity } },
         { $inc: { stockQuantity: -item.quantity } },
-      ),
-    ),
-  );
+      );
 
-  const failedIndex = updateResults.findIndex((result) => result.modifiedCount !== 1);
+      if (result.modifiedCount !== 1) {
+        throw new AppError(400, `Insufficient stock for product ${item.product}`);
+      }
 
-  if (failedIndex !== -1) {
-    throw new AppError(
-      400,
-      `Insufficient stock for product at position ${failedIndex + 1}`,
-    );
+      appliedDecrements.push({ product: item.product, quantity: item.quantity });
+    }
+
+    return await Sale.create({
+      items: saleDocument.saleItems,
+      grandTotal: saleDocument.grandTotal,
+      createdBy: saleDocument.createdBy,
+    });
+  } catch (error) {
+    await rollbackAppliedDecrements();
+    throw error;
   }
-
-  return Sale.create({
-    items: saleDocument.saleItems,
-    grandTotal: saleDocument.grandTotal,
-    createdBy: saleDocument.createdBy,
-  });
 };
 
 const isReplicaSet = async (): Promise<boolean> => {

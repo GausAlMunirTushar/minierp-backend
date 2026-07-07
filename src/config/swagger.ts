@@ -22,6 +22,7 @@ const definition: swaggerJsdoc.OAS3Definition = {
   tags: [
     { name: 'Auth', description: 'Login and JWT issuance' },
     { name: 'Products', description: 'Product catalog CRUD, image upload, search and pagination' },
+    { name: 'Categories', description: 'Product category CRUD used to drive category dropdowns' },
     { name: 'Sales', description: 'Sale creation with automatic stock reduction, sale history' },
     { name: 'Dashboard', description: 'Aggregate statistics and low-stock monitoring' },
     { name: 'Setup', description: 'Authenticated app bootstrap payload' },
@@ -73,6 +74,15 @@ const definition: swaggerJsdoc.OAS3Definition = {
           sellingPrice: { type: 'number', example: 14.99 },
           stockQuantity: { type: 'number', example: 42 },
           image: { type: 'string', example: '/uploads/products/1710000000000-123456789.png' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Category: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string', example: '65f1c2b3a4d5e6f7a8b9c0d1' },
+          name: { type: 'string', example: 'Electronics' },
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
         },
