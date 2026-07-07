@@ -7,6 +7,11 @@ const stockFromFormData = z.preprocess(
   z.number().int().min(0, 'Stock quantity cannot be negative'),
 );
 
+const imageFileSchema = z.object({
+  buffer: z.instanceof(Buffer),
+  mimetype: z.string().startsWith('image/'),
+}).passthrough();
+
 export const createProductValidationSchema = z.object({
   body: z.object({
     name: z.string().min(1).max(150),
@@ -16,11 +21,7 @@ export const createProductValidationSchema = z.object({
     sellingPrice: numberFromFormData,
     stockQuantity: stockFromFormData,
   }),
-  file: z
-    .object({
-      filename: z.string(),
-    })
-    .passthrough(),
+  file: imageFileSchema,
 });
 
 export const updateProductValidationSchema = z.object({
@@ -38,12 +39,7 @@ export const updateProductValidationSchema = z.object({
     })
     .optional()
     .default({}),
-  file: z
-    .object({
-      filename: z.string(),
-    })
-    .passthrough()
-    .optional(),
+  file: imageFileSchema.optional(),
 });
 
 export const productIdValidationSchema = z.object({
