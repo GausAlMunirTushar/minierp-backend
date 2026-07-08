@@ -18,6 +18,10 @@ const definition: swaggerJsdoc.OAS3Definition = {
       url: `http://localhost:${env.PORT}/api/v1`,
       description: 'Local development server',
     },
+    {
+      url: 'https://minierpapi.gausalmunir.site/api/v1',
+      description: 'Production VPS server',
+    },
   ],
   tags: [
     { name: 'Auth', description: 'Login and JWT issuance' },
