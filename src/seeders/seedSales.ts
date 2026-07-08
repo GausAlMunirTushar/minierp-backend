@@ -6,11 +6,8 @@ import logger from '@/lib/logger';
 export const seedSales = async () => {
   logger.info('Seeding sales history...');
 
-  const exists = await Sale.findOne();
-  if (exists) {
-    logger.info('Sales history already exists — skipping');
-    return;
-  }
+  logger.info('Clearing existing sales history...');
+  await Sale.deleteMany({});
 
   const admin = await User.findOne({ role: 'admin' });
   if (!admin) {
