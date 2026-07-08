@@ -2,6 +2,8 @@ import { connectDatabase, disconnectDatabase } from '@/config/database';
 import { seedCategories } from '@/seeders/seedCategories';
 import { seedRoles } from '@/seeders/seedRoles';
 import { seedUsers } from '@/seeders/seedUsers';
+import { seedProducts } from '@/seeders/seedProducts';
+import { seedSales } from '@/seeders/seedSales';
 import logger from '@/lib/logger';
 
 const seedAll = async () => {
@@ -12,6 +14,8 @@ const seedAll = async () => {
     await seedRoles();
     await seedCategories();
     await seedUsers();
+    await seedProducts();
+    await seedSales();
 
     logger.info('All seeders completed successfully');
     await disconnectDatabase();
