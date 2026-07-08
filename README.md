@@ -61,7 +61,10 @@ Created/updated by `pnpm seed` (see `src/seeders/`):
 
 ## API Documentation
 
-Interactive Swagger UI is served once the API is running:
+*   **Production API Docs (Swagger):** [https://minierpapi.gausalmunir.site/api-docs](https://minierpapi.gausalmunir.site/api-docs)
+*   **Production Base URL:** `https://minierpapi.gausalmunir.site/api/v1`
+
+Interactive Swagger UI is served once the API is running locally:
 
 - UI: `http://localhost:4000/api-docs`
 - Raw OpenAPI JSON: `http://localhost:4000/api-docs.json`
