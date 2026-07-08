@@ -46,10 +46,17 @@ export const updateProduct = async (
   payload: UpdateProductPayload,
   file?: Express.Multer.File,
 ) => {
-  if (payload.purchasePrice !== undefined && payload.sellingPrice !== undefined) {
-    if (payload.sellingPrice <= payload.purchasePrice) {
-      throw new AppError(400, 'Selling price must be greater than purchase price');
-    }
+  const existingProduct = await Product.findById(id).select('purchasePrice sellingPrice imagePublicId');
+
+  if (!existingProduct) {
+    throw new AppError(404, 'Product not found');
+  }
+
+  const purchasePrice = payload.purchasePrice !== undefined ? payload.purchasePrice : existingProduct.purchasePrice;
+  const sellingPrice = payload.sellingPrice !== undefined ? payload.sellingPrice : existingProduct.sellingPrice;
+
+  if (sellingPrice <= purchasePrice) {
+    throw new AppError(400, 'Selling price must be greater than purchase price');
   }
 
   const updatePayload: Record<string, unknown> = {
@@ -58,13 +65,11 @@ export const updateProduct = async (
   };
 
   if (file) {
-    const existingProduct = await Product.findById(id).select('imagePublicId');
-
     const { url, publicId } = await uploadProductImage(file);
     updatePayload.image = url;
     updatePayload.imagePublicId = publicId;
 
-    if (existingProduct?.imagePublicId) {
+    if (existingProduct.imagePublicId) {
       deleteImage(existingProduct.imagePublicId);
     }
   }
@@ -74,11 +79,7 @@ export const updateProduct = async (
     runValidators: true,
   });
 
-  if (!product) {
-    throw new AppError(404, 'Product not found');
-  }
-
-  return product;
+  return product!;
 };
 
 export const deleteProduct = async (id: string) => {
